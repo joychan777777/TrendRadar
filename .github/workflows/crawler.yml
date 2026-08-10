@@ -213,3 +213,21 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy cloudflare_dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+
+# --------------------------------------------------------------------------------
+      # 📦 提交结果回仓库（自定义追加 · 供 GitHub Pages 使用）
+      # --------------------------------------------------------------------------------
+      - name: Commit results back to repo
+        if: success()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.html output/ 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "ℹ️ 没有新数据，跳过提交"
+          else
+            git commit -m "chore: update hot news $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git pull --rebase --autostash origin master || true
+            git push origin HEAD:master
+            echo "✅ 已提交回仓库"
+          fi
